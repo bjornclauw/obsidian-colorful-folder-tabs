@@ -1,0 +1,137 @@
+/* ---------------------------------------------
+   Topaz-style expanding color capsule with leaf/tab
+---------------------------------------------- */
+
+/* --- Assign colors to specific top-level folders --- */
+.tree-item.nav-folder[data-name="Projecten"]>.nav-folder-title { --tab-color: #e74c3c; }
+.tree-item.nav-folder[data-name="Design"]>.nav-folder-title { --tab-color: #3498db; }
+.tree-item.nav-folder[data-name="Archive"]>.nav-folder-title { --tab-color: #2ecc71; }
+.tree-item.nav-folder[data-name="Clients"]>.nav-folder-title { --tab-color: #f1c40f; }
+.tree-item.nav-folder[data-name="Admin"]>.nav-folder-title { --tab-color: #9b59b6; }
+.tree-item.nav-folder[data-name="Resources"]>.nav-folder-title { --tab-color: #e67e22; }
+
+/* Relative positioning for pseudo-element alignment */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* --- Subtle outline when collapsed with spacing between folders --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder.is-collapsed {
+    border: 1px solid color-mix(in srgb, var(--tab-color) 20%, transparent);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    padding: 0;
+    transition: border-color 0.2s ease;
+}
+
+/* --- Expanded top folders --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder:not(.is-collapsed) {
+    border-left: 3px solid var(--tab-color);
+    border-top: 1px solid color-mix(in srgb, var(--tab-color) 35%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--tab-color) 35%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--tab-color) 25%, transparent);
+    border-radius: 5px;
+    border-top-left-radius: 0%;
+    background: none;
+    padding: 0;
+    margin-bottom: 6px;
+    transition: all 0.2s ease;
+}
+
+/* --- Keep titles clean --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder>.nav-folder-title {
+    background: none !important;
+    color: var(--text-normal);
+    font-weight: 800;
+    position: relative;
+}
+
+/* --- Subfolder titles --- */
+.tree-item.nav-folder .tree-item.nav-folder .nav-folder-title {
+    font-weight: 500;
+    color: var(--text-normal);
+    background: none !important;
+    position: relative;
+}
+
+/* --- Right-side dot --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder>.nav-folder-title::after {
+    content: "⬤";
+    color: var(--tab-color);
+    opacity: 0.7;
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* --- Leaf/tab left of folder --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder>.nav-folder-title::before {
+    content: "";
+    position: absolute;
+    left: -3px;
+    top: 53%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 115%;
+    background-color: var(--tab-color);
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+/* --- Leaf/tab expands to the left when folder is open --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder:not(.is-collapsed)>.nav-folder-title::before {
+    left: -12px;
+    top: 48%;
+    width: 12px;
+    height: 105%;
+}
+
+/* --- Hover glow --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder:not(.is-collapsed):hover {
+    box-shadow: 0 0 8px color-mix(in srgb, var(--tab-color) 60%, transparent);
+}
+
+/* --- Highlight collapsed folders/notes on hover --- */
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder.is-collapsed:hover,
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-note.is-collapsed:hover {
+    background: color-mix(in srgb, var(--tab-color) 30%, var(--background-secondary));
+    transform: translateY(0px);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* --- Hover highlight for subitems --- */
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.is-clickable.nav-folder-title:hover,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item.nav-note:hover,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item.nav-file:hover {
+    background-color: color-mix(in srgb, var(--tab-color) 30%, var(--background-secondary)) !important;
+    color: var(--text-normal) !important;
+    border-radius: 5px !important;
+    margin-right: 4px !important;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* --- Opened/active file --- */
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.nav-file-title.is-active,
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.nav-file-title.has-focus {
+    background-color: color-mix(in srgb, var(--tab-color) 50%, var(--background-secondary)) !important;
+    color: var(--text-normal) !important;
+    font-weight: 700;
+    border-radius: 4px;
+    margin-right: 8px !important;
+    left: 4px !important;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* --- Pulse animation --- */
+@keyframes pulse-focus {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.workspace-leaf-content[data-type="file-explorer"] .tree-item-self.nav-file-title.has-focus {
+    animation: pulse-focus 1.5s infinite;
+}

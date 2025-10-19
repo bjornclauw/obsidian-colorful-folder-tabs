@@ -1,0 +1,11 @@
+{
+	"id": "colorful-folder-tabs",
+	"name": "Colorful folder tabs",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "This plugin adds colorful tabs to your folder icons in the file explorer, making it easier to distinguish between different folders at a glance.",
+	"author": "bjornclauw",
+	"authorUrl": "",
+	"fundingUrl": "",
+	"isDesktopOnly": false
+}
