@@ -1,5 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { styles } from './styles';
+import './styles.css';
+
 
 interface FolderMapping {
     name: string;
@@ -15,14 +16,13 @@ const DEFAULT_SETTINGS: FolderColorSettings = {
     enabled: true,
     mappings: [
         // example defaults (you can remove these)
-        { name: 'Projecten', color: '#e74c3c' },
+        { name: 'Projects', color: '#e74c3c' },
         { name: 'Design', color: '#3498db' },
     ],
 };
 
 export default class FolderColorPlugin extends Plugin {
-    settings: FolderColorSettings;
-    private styleEl: HTMLStyleElement | null = null;
+    settings: FolderColorSettings = DEFAULT_SETTINGS;
     private observer: MutationObserver | null = null;
 
     async onload() {
@@ -53,19 +53,10 @@ export default class FolderColorPlugin extends Plugin {
     }
 
         addStyles() {
-                // We still inject the base CSS so the rest of the styling is present
-                if (!this.styleEl) {
-                    this.styleEl = document.createElement('style');
-                    this.styleEl.setAttribute('type', 'text/css');
-                    this.styleEl.id = 'folder-color-plugin-styles';
-                    document.head.appendChild(this.styleEl);
-                }
-                this.styleEl.textContent = styles;
-
-                // Apply mappings by scanning the DOM and setting inline custom properties
+                // Base CSS is imported via side-effect import './styles.css' and will be
+                // injected by the bundler. We only need to apply mappings and observe
+                // the DOM for dynamic updates.
                 this.applyMappingsToDOM();
-
-                // Observe DOM changes in the file explorer to reapply mappings when needed
                 this.setupObserver();
         }
 
@@ -76,10 +67,6 @@ export default class FolderColorPlugin extends Plugin {
             }
             // Remove inline styles set by mappings
             this.clearInlineMappings();
-            if (this.styleEl) {
-                this.styleEl.remove();
-                this.styleEl = null;
-            }
     }
 
         private applyMappingsToDOM() {

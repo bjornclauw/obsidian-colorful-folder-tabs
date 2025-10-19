@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import fs from 'fs';
+import path from 'path';
 
 const banner =
 `/*
@@ -11,11 +13,44 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === "production");
 
-const context = await esbuild.context({
-	banner: {
-		js: banner,
-	},
-	entryPoints: ["main.ts"],
+const outDir = 'build';
+const outFile = path.join(outDir, 'main.js');
+const outCss = path.join(outDir, 'main.css');
+const outCssRenamed = path.join(outDir, 'styles.css');
+
+function ensureOutDir() {
+	if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+}
+
+function copyCssIfExists() {
+	try {
+		if (fs.existsSync(outCss)) {
+			fs.renameSync(outCss,outCssRenamed);
+			console.log(`Copied ${outCss} -> ${outCssRenamed}`);
+		}
+	} catch (e) {
+		console.error('Failed to copy CSS:', e);
+	}
+}
+
+function copyManifestIfExists() {
+	try {
+		if (fs.existsSync('manifest.json')) {
+			fs.copyFileSync('manifest.json','./build/manifest.json');
+			
+		}
+		if (fs.existsSync('package.json')) {
+			fs.copyFileSync('package.json','./build/package.json');
+			
+		}
+	} catch (e) {
+		console.error('Failed to copy Manifest', e);
+	}
+}
+
+const buildOptions = {
+	banner: { js: banner },
+	entryPoints: ["src/main.ts"],
 	bundle: true,
 	external: [
 		"obsidian",
@@ -31,19 +66,40 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtins],
+		...builtins
+	],
 	format: "cjs",
 	target: "es2018",
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outfile: "main.js",
+	outfile: outFile,
 	minify: prod,
-});
+};
+
+ensureOutDir();
+
+const context = await esbuild.context(buildOptions);
 
 if (prod) {
+	// Production build
 	await context.rebuild();
+	copyCssIfExists();
+	copyManifestIfExists();
 	process.exit(0);
 } else {
+	// Dev watch: start watching and also watch the emitted CSS file to copy it
+	// after each rebuild.
 	await context.watch();
+	// copy once for the initial build
+	copyCssIfExists();
+
+	// Watch for changes to main.css and copy to styles.css when modified
+	fs.watchFile(outCss, { interval: 200 }, (curr, prev) => {
+		if (curr.mtimeMs !== prev.mtimeMs) {
+			copyCssIfExists();
+		}
+	});
+
+	console.log('[watch] build finished, watching for changes...');
 }
