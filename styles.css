@@ -2,14 +2,6 @@
    Topaz-style expanding color capsule with leaf/tab
 ---------------------------------------------- */
 
-/* --- Assign colors to specific top-level folders --- */
-.tree-item.nav-folder[data-name="Projecten"]>.nav-folder-title { --tab-color: #e74c3c; }
-.tree-item.nav-folder[data-name="Design"]>.nav-folder-title { --tab-color: #3498db; }
-.tree-item.nav-folder[data-name="Archive"]>.nav-folder-title { --tab-color: #2ecc71; }
-.tree-item.nav-folder[data-name="Clients"]>.nav-folder-title { --tab-color: #f1c40f; }
-.tree-item.nav-folder[data-name="Admin"]>.nav-folder-title { --tab-color: #9b59b6; }
-.tree-item.nav-folder[data-name="Resources"]>.nav-folder-title { --tab-color: #e67e22; }
-
 /* Relative positioning for pseudo-element alignment */
 .workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder {
     position: relative;
