@@ -5,9 +5,9 @@
 work in progress
 
 ## Screenshot
-![alt text](docs\image2.png)
-![alt text](docs\image.png)
-![alt text](docs\settings.png)
+![alt text](docs/image2.png)
+![alt text](docs/image.png)
+![alt text](docs/settings.png)
 
 
 
