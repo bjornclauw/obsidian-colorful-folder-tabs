@@ -3,7 +3,7 @@
 	"name": "Colorful Folder Tabs",
 	"version": "1.1.1",
 	"minAppVersion": "0.15.0",
-	"description": "Add colorful tabs to your folder in the file explorer, making it easier to distinguish between different folders at a glance.",
+	"description": "Add colorful tabs and highlights to your folders in the file explorer.",
 	"author": "bjornclauw",
 	"authorUrl": "https://github.com/bjornclauw",
 	"fundingUrl": "https://buymeacoffee.com/bjornclauw",
