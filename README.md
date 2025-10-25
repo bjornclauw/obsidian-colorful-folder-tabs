@@ -40,13 +40,15 @@ use it with "custom file explorer sorting" to customize the order of folders and
 
 Your folder structure should look like this:
 
+```
 .your-vault/
 └─ .obsidian/
-└─ plugins/
-└─ colorful-folder-tabs/
-├─ main.js
-├─ manifest.json
-└─ styles.css
+   └─ plugins/
+      └─ colorful-folder-tabs/
+         ├─ main.js
+         ├─ manifest.json
+         └─ styles.css
+```
 
 
 ### 3. Enable the Plugin in Obsidian
