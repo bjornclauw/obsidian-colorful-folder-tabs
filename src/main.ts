@@ -82,7 +82,6 @@ export default class FolderColorPlugin extends Plugin {
         const htmlEl = el as HTMLElement;
         htmlEl.style.removeProperty('--tab-color');
         htmlEl.style.removeProperty('color');
-        htmlEl.style.removeProperty('font-weight');
 
         // Remove dot class
         htmlEl.classList.remove('fc-dot-enabled');
@@ -109,9 +108,6 @@ export default class FolderColorPlugin extends Plugin {
 			) as HTMLElement[];
 
 			folderTitleEls.forEach((titleEl) => {
-				// Font weight for top-level folders
-				titleEl.style.fontWeight = this.settings.topFolderFontWeight.toString();
-
 				// Show/hide dot
 				if (this.settings.showDot) {
 					titleEl.classList.add('fc-dot-enabled');
@@ -156,9 +152,6 @@ export default class FolderColorPlugin extends Plugin {
 			} else {
 				titleEl.classList.remove('fc-dot-enabled');
 			}
-
-			// Set font weight for top-level folders
-			titleEl.style.fontWeight = this.settings.topFolderFontWeight.toString();
 		});
 	}
 
