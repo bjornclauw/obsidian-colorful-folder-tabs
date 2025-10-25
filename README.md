@@ -2,13 +2,18 @@
 
 
 ## Description
-work in progress
+Folder Color Plugin – Enhance the Obsidian default theme file explorer by adding colored folder labels, optional colored dots for top-level folders, and bold fonts to clearly distinguish top-level folders from subfolders. Updates dynamically as folders are added or renamed.
+
+use it with the "iconic plugin" to add custom icons to folders: https://obsidian.md/plugins?id=iconic
+usi it with "custom file explorer sorting" to customize the order of folders and files: https://obsidian.md/plugins?id=custom-sort
 
 ## Screenshot
+### Example
 ![alt text](docs/image2.png)
 ![alt text](docs/image.png)
-![alt text](docs/settings.png)
 
+### Settings
+![alt text](docs/settings.png)
 
 
 

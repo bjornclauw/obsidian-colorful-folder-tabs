@@ -3,20 +3,25 @@ import './styles.css';
 
 interface FolderMapping {
 	name: string;
-	color: string; // hex
+	color: string;
+	textColor: string;
 }
 
 interface FolderColorSettings {
 	enabled: boolean;
 	mappings: FolderMapping[];
+	showDot: boolean;
+	topFolderFontWeight: number;
 }
 
 const DEFAULT_SETTINGS: FolderColorSettings = {
 	enabled: true,
 	mappings: [
-		{ name: 'Projects', color: '#e74c3c' },
-		{ name: 'Design', color: '#3498db' },
+		{ name: 'Projects', color: '#e74c3c', textColor: '#ffffff' },
+		{ name: 'Design', color: '#3498db', textColor: '#ffffff' },
 	],
+	showDot: true,
+	topFolderFontWeight: 800,
 };
 
 export default class FolderColorPlugin extends Plugin {
@@ -61,28 +66,60 @@ export default class FolderColorPlugin extends Plugin {
 	/** --------------------- Core functionality --------------------- **/
 
 	public addStyles() {
-		this.applyMappingsToAllExplorers();
-		this.setupObserversForExplorers();
+		this.applyStructuralStyles(); // always apply structural stuff
+		if (this.settings.enabled) {
+			this.applyMappingsToAllExplorers(); // colors only if enabled
+			this.setupObserversForExplorers();
+		}
 	}
 
 	public removeStyles() {
-		// Remove all inline colors
-		const allFolderItems = document.querySelectorAll(
-			'.tree-item.nav-folder, .nav-folder-title'
+    // Remove all inline colors and font weights
+    const allFolderItems = document.querySelectorAll(
+        '.tree-item.nav-folder, .nav-folder-title'
+    );
+    allFolderItems.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.removeProperty('--tab-color');
+        htmlEl.style.removeProperty('color');
+        htmlEl.style.removeProperty('font-weight');
+
+        // Remove dot class
+        htmlEl.classList.remove('fc-dot-enabled');
+    });
+
+    // Disconnect main observer
+    if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+    }
+
+    // Disconnect all explorer-specific observers
+    this.explorerObservers.forEach((obs) => obs.disconnect());
+    this.explorerObservers = new Map();
+}
+	private applyStructuralStyles() {
+		const explorers = document.querySelectorAll(
+			'.workspace-leaf-content[data-type="file-explorer"]'
 		);
-		allFolderItems.forEach((el) => {
-			(el as HTMLElement).style.removeProperty('--tab-color');
+
+		explorers.forEach((explorer) => {
+			const folderTitleEls = Array.from(
+				explorer.querySelectorAll('.tree-item.nav-folder .nav-folder-title')
+			) as HTMLElement[];
+
+			folderTitleEls.forEach((titleEl) => {
+				// Font weight for top-level folders
+				titleEl.style.fontWeight = this.settings.topFolderFontWeight.toString();
+
+				// Show/hide dot
+				if (this.settings.showDot) {
+					titleEl.classList.add('fc-dot-enabled');
+				} else {
+					titleEl.classList.remove('fc-dot-enabled');
+				}
+			});
 		});
-
-		// Disconnect main observer
-		if (this.observer) {
-			this.observer.disconnect();
-			this.observer = null;
-		}
-
-		// Disconnect all explorer-specific observers
-		this.explorerObservers.forEach((obs) => obs.disconnect());
-		this.explorerObservers = new Map();
 	}
 
 	/** Apply mappings to all currently available explorers */
@@ -101,20 +138,27 @@ export default class FolderColorPlugin extends Plugin {
 		if (!mappings.length) return;
 
 		const folderTitleEls = Array.from(
-			container.querySelectorAll(
-				'.tree-item.nav-folder .nav-folder-title'
-			)
+			container.querySelectorAll('.tree-item.nav-folder .nav-folder-title')
 		) as HTMLElement[];
+
 		folderTitleEls.forEach((titleEl) => {
 			const text = titleEl.textContent?.trim() || '';
 			const mapping = mappings.find((m) => m.name === text);
-			const folderItem = titleEl.closest(
-				'.tree-item.nav-folder'
-			) as HTMLElement | null;
+			const folderItem = titleEl.closest('.tree-item.nav-folder') as HTMLElement | null;
 			if (mapping && folderItem) {
 				folderItem.style.setProperty('--tab-color', mapping.color);
 				titleEl.style.setProperty('--tab-color', mapping.color);
+				titleEl.style.color = mapping.textColor || '#ffffff';
 			}
+			// Show/hide dot
+			if (this.settings.showDot) {
+				titleEl.classList.add('fc-dot-enabled');
+			} else {
+				titleEl.classList.remove('fc-dot-enabled');
+			}
+
+			// Set font weight for top-level folders
+			titleEl.style.fontWeight = this.settings.topFolderFontWeight.toString();
 		});
 	}
 
@@ -179,7 +223,6 @@ class FolderColorSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-
 		containerEl.createEl('h2', { text: 'Folder Color settings' });
 
 		new Setting(containerEl)
@@ -191,63 +234,145 @@ class FolderColorSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.enabled = value;
 						await this.plugin.saveData(this.plugin.settings);
+
+						// Apply or remove styles immediately
 						if (value) this.plugin.addStyles();
 						else this.plugin.removeStyles();
+
+						// Re-render settings panel so sections hide/show instantly
+						this.display();
 					})
 			);
 
+		// --- Hide everything else if disabled ---
+		if (!this.plugin.settings.enabled) {
+			const note = containerEl.createEl('p', {
+				text: 'Folder colors are currently disabled. Enable them to configure mappings.',
+			});
+			note.style.color = 'var(--text-muted)';
+			note.style.fontStyle = 'italic';
+			return; // stop rendering the rest
+		}
+
+		new Setting(containerEl)
+			.setName('Show colored dot')
+			.setDesc('Display a colored dot on top-level folders')
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showDot)
+					.onChange(async (value) => {
+						this.plugin.settings.showDot = value;
+						await this.plugin.saveData(this.plugin.settings);
+						if (this.plugin.settings.enabled) this.plugin.addStyles();
+					})
+			);
 		// Mappings list
 		containerEl.createEl('h3', { text: 'Folder → Color mappings' });
 		const list = containerEl.createDiv({ cls: 'folder-color-list' });
-
 		const mappings = this.plugin.settings.mappings || [];
+
 		mappings.forEach((m, idx) => {
 			const row = list.createDiv({ cls: 'folder-mapping-row' });
-			row.createEl('label', { text: 'Folder name', cls: 'mapping-label' });
-                const nameInput = row.createEl('input', { attr: { type: 'text', placeholder: 'Folder name', value: m.name } });
-			nameInput.style.marginRight = '8px';
+			row.style.display = 'flex';
+			row.style.alignItems = 'center';
+			row.style.gap = '10px';
+			row.style.marginBottom = '6px';
+
+			// Folder name
+			const nameInput = row.createEl('input', {
+				attr: { type: 'text', placeholder: 'Folder name', value: m.name },
+			});
+			nameInput.classList.add('folder-name-input');
+			nameInput.style.flex = '1';
 			nameInput.onchange = async () => {
 				mappings[idx].name = nameInput.value.trim();
 				await this.plugin.saveData(this.plugin.settings);
-				this.plugin.addStyles();
+				if (this.plugin.settings.enabled) this.plugin.addStyles();
 				this.display();
 			};
 
-			row.createEl('label', { text: 'Color', cls: 'mapping-label' });
-			const colorInput = row.createEl('input', { attr: { type: 'color', value: m.color || '#ff0000' } });
-			colorInput.style.marginRight = '8px';
+			// Background color
+			const colorLabel = row.createEl('span', { text: 'BG', cls: 'mapping-label' });
+			colorLabel.title = 'Background color';
+			const colorInput = row.createEl('input', {
+				attr: { type: 'color', value: m.color || '#ff0000' },
+			});
+			colorInput.style.width = '40px';
+			colorInput.style.height = '28px';
+			colorInput.style.cursor = 'pointer';
 			colorInput.onchange = async () => {
 				mappings[idx].color = colorInput.value;
 				await this.plugin.saveData(this.plugin.settings);
-				this.plugin.addStyles();
+				if (this.plugin.settings.enabled) this.plugin.addStyles();
 			};
 
-			const removeBtn = row.createEl('button', { text: 'Remove' });
+			// Text color
+			const textLabel = row.createEl('span', { text: 'TXT', cls: 'mapping-label' });
+			textLabel.title = 'Text color';
+			const textColorInput = row.createEl('input', {
+				attr: { type: 'color', value: m.textColor || '#ffffff' },
+			});
+			textColorInput.style.width = '40px';
+			textColorInput.style.height = '28px';
+			textColorInput.style.cursor = 'pointer';
+			textColorInput.onchange = async () => {
+				mappings[idx].textColor = textColorInput.value;
+				await this.plugin.saveData(this.plugin.settings);
+				if (this.plugin.settings.enabled) this.plugin.addStyles();
+			};
+
+			// Remove button
+			const removeBtn = row.createEl('button', { text: '✕' });
+			removeBtn.classList.add('mod-warning');
+			removeBtn.style.marginLeft = 'auto';
+			removeBtn.title = 'Remove this mapping';
 			removeBtn.onclick = async () => {
 				mappings.splice(idx, 1);
 				await this.plugin.saveData(this.plugin.settings);
-				this.plugin.addStyles();
+				if (this.plugin.settings.enabled) this.plugin.addStyles();
 				this.display();
 			};
 		});
 
 		// Add new mapping
-		containerEl.createEl('h4', { text: 'Add mapping' });
+		containerEl.createEl('h4', { text: 'Add new mapping' });
 		const addRow = containerEl.createDiv({ cls: 'folder-mapping-add' });
-		const newName = addRow.createEl('input', { attr: { type: 'text', placeholder: 'Folder name' } });
-		newName.style.marginRight = '8px';
-		const newColor = addRow.createEl('input', { attr: { type: 'color', value: '#ff0000' } });
-		newColor.style.marginRight = '8px';
-		const addBtn = addRow.createEl('button', { text: 'Add' });
+		addRow.style.display = 'flex';
+		addRow.style.alignItems = 'center';
+		addRow.style.gap = '10px';
+		addRow.style.marginTop = '8px';
+
+		const newName = addRow.createEl('input', {
+			attr: { type: 'text', placeholder: 'Folder name' },
+		});
+		newName.style.flex = '1';
+
+		const newColor = addRow.createEl('input', {
+			attr: { type: 'color', value: '#ff0000' },
+		});
+		newColor.style.width = '40px';
+		newColor.style.height = '28px';
+		newColor.style.cursor = 'pointer';
+
+		const newTextColor = addRow.createEl('input', {
+			attr: { type: 'color', value: '#ffffff' },
+		});
+		newTextColor.style.width = '40px';
+		newTextColor.style.height = '28px';
+		newTextColor.style.cursor = 'pointer';
+
+		const addBtn = addRow.createEl('button', { text: 'Add mapping' });
+		addBtn.classList.add('mod-cta');
 		addBtn.onclick = async () => {
 			const name = (newName.value || '').trim();
-			const color = newColor.value || '#ffffff';
 			if (!name) return;
-			this.plugin.settings.mappings = this.plugin.settings.mappings || [];
-			this.plugin.settings.mappings.push({ name, color });
+			const color = newColor.value || '#ffffff';
+			const textColor = newTextColor.value || '#ffffff';
+			this.plugin.settings.mappings.push({ name, color, textColor });
 			await this.plugin.saveData(this.plugin.settings);
-			this.plugin.addStyles();
+			if (this.plugin.settings.enabled) this.plugin.addStyles();
 			this.display();
 		};
+
 	}
 }

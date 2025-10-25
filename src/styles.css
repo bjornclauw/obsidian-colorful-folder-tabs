@@ -48,7 +48,7 @@
 }
 
 /* --- Right-side dot --- */
-.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder>.nav-folder-title::after {
+.workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder>.nav-folder-title.fc-dot-enabled::after {
     content: "⬤";
     color: var(--tab-color);
     opacity: 0.7;
