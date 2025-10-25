@@ -2,12 +2,12 @@
 
 
 ## Description
-Folder Color Plugin – Enhance the Obsidian default theme file explorer by adding colored folder labels, optional colored dots for top-level folders, and bold fonts to clearly distinguish top-level folders from subfolders. Updates dynamically as folders are added or renamed.
+Colorful Folder Tabs – Enhance the Obsidian default theme file explorer by adding colored folder labels, optional colored dots for top-level folders, and bold fonts to clearly distinguish top-level folders from subfolders. Updates dynamically as folders are added or renamed.
 
 use it with the "iconic plugin" to add custom icons to folders: https://obsidian.md/plugins?id=iconic
 usi it with "custom file explorer sorting" to customize the order of folders and files: https://obsidian.md/plugins?id=custom-sort
 
-## Screenshot
+## Screenshots
 ### Example
 ![alt text](docs/image2.png)
 ![alt text](docs/image.png)
@@ -17,66 +17,62 @@ usi it with "custom file explorer sorting" to customize the order of folders and
 
 
 
+## Installation Guide
 
-## Releasing new releases
+### 1. Download the Plugin
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+1. Download the plugin repository from GitHub (or the source you obtained it from).  
+   You should have a folder containing at least:
+   - `main.js`
+   - `manifest.json`
+   - `styles.css`
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+2. Rename the folder if necessary, e.g., `colorful-folder-tabs`.
 
-## Adding your plugin to the community plugin list
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### 2. Move the Plugin to Your Vault
 
-## How to use
+1. Open your Obsidian vault.
+2. Navigate to the hidden `.obsidian/plugins/` folder.
+   - If the `plugins` folder does not exist, create it.
+3. Move the `colorful-folder-tabs` folder (containing the plugin files) into `.obsidian/plugins/`.
+
+Your folder structure should look like this:
+
+.your-vault/
+└─ .obsidian/
+└─ plugins/
+└─ colorful-folder-tabs/
+├─ main.js
+├─ manifest.json
+└─ styles.css
+
+
+### 3. Enable the Plugin in Obsidian
+
+1. Open Obsidian and go to **Settings → Community plugins**.
+2. If **Safe Mode** is enabled, disable it.
+3. Click **Installed plugins**, find **colorful-folder-tabs**, and toggle it **ON**.
+
+
+### 4. Configure Folder Colors
+
+1. Go to **Settings → colorful-folder-tabs**.
+2. Options include:
+   - **Enable folder colors:** Toggle all plugin styling.
+   - **Show colored dot:** Add a small colored dot to top-level folders.
+   - **Folder → Color mappings:** Define background and text colors per folder name.
+3. Changes are applied **immediately** and dynamically update as folders are added or renamed.
+
+
+### 5. Enjoy Your Custom File Explorer
+
+Your Obsidian file explorer will now display custom colors, dots, and bold fonts, improving visual navigation and organization.
+
+
+## How to build
 
 - Clone this repo.
 - Make sure your NodeJS is at least v16 (`node --version`).
 - `npm i` or `yarn` to install dependencies.
 - `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```

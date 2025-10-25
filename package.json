@@ -1,6 +1,6 @@
 {
 	"name": "colorful-folder-tabs",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "This plugin adds colorful tabs to your folder icons in the file explorer, making it easier to distinguish between different folders at a glance.",
 	"main": "main.js",
 	"scripts": {
