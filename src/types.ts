@@ -9,8 +9,6 @@ export interface FolderColorSettings {
 	enabled: boolean;
 	mappings: FolderMapping[];
 	showDot: boolean;
-
     subFolderFontWeight?: number;
 	mainFolderFontWeight?: number;
-
 }
