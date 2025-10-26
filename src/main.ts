@@ -146,7 +146,7 @@ export default class FolderColorPlugin extends Plugin {
 		});
 	}
 
-	/**
+/**
  * Observe workspace for dynamically added explorers.
  *
  * Only observes new file explorers being added to the workspace.
