@@ -8,7 +8,6 @@ use it with the "iconic plugin" to add custom icons to folders/files:
 use it with "custom file explorer sorting" to customize the order of folders and files: 
 - https://obsidian.md/plugins?id=custom-sort
 
----
 
 ## Features
 
