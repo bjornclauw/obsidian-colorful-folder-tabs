@@ -1,6 +1,62 @@
-/* ---------------------------------------------
-   Topaz-style expanding color capsule with leaf/tab
----------------------------------------------- */
+/* -------------------------------------
+Expanding color capsule with leaf/tab
+------------------------------------- */
+
+/* SETTINGS */
+.fc-mapping-row .setting-item-control {
+	display: flex;
+	align-items: center;
+	justify-content: space-between; /* push trash button right */
+}
+
+.fc-left-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.fc-inline-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.fc-inline-checkbox {
+	margin: 0;
+}
+
+.fc-inline-color {
+	width: 28px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	cursor: pointer;
+}
+
+.fc-text-input {
+	width: 120px;
+}
+
+.fc-color-input {
+	width: 28px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	cursor: pointer;
+}
+
+/* SETTINGS */
+
+
+
+
+
+
+
+/* --- FolderColor plugin dynamic color binding --- */
+.fc-colored-folder {
+	--tab-color: attr(data-tab-color color, var(--interactive-accent));
+}
 
 /* Relative positioning for pseudo-element alignment */
 .workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder {
@@ -31,19 +87,18 @@
     transition: all 0.2s ease;
 }
 
-/* --- Keep titles clean --- */
+/* --- Topfolder titles --- */
 .workspace-leaf-content[data-type="file-explorer"]>.nav-files-container>div>.tree-item.nav-folder>.nav-folder-title {
     background: none !important;
-    color: var(--text-normal);
-    font-weight: 800;
+    color: var(--text-color, var(--text-normal));
+    font-weight: var(--fc-main-folder-weight);
     position: relative;
 }
 
 /* --- Subfolder titles --- */
 .tree-item.nav-folder .tree-item.nav-folder .nav-folder-title {
-    font-weight: 500;
-    color: var(--text-normal);
-    background: none !important;
+    font-weight: var(--fc-sub-folder-weight);
+    color: var(--text-color, var(--text-normal));
     position: relative;
 }
 
@@ -99,7 +154,7 @@
 .workspace-leaf-content[data-type="file-explorer"] .tree-item.nav-note:hover,
 .workspace-leaf-content[data-type="file-explorer"] .tree-item.nav-file:hover {
     background-color: color-mix(in srgb, var(--tab-color) 30%, var(--background-secondary)) !important;
-    color: var(--text-normal) !important;
+    color: var(--text-color, var(--text-normal));
     border-radius: 5px !important;
     margin-right: 4px !important;
     transition: background 0.2s ease, transform 0.2s ease;
@@ -109,7 +164,7 @@
 .workspace-leaf-content[data-type="file-explorer"] .tree-item-self.nav-file-title.is-active,
 .workspace-leaf-content[data-type="file-explorer"] .tree-item-self.nav-file-title.has-focus {
     background-color: color-mix(in srgb, var(--tab-color) 50%, var(--background-secondary)) !important;
-    color: var(--text-normal) !important;
+    color: var(--text-color, var(--text-normal));
     font-weight: 700;
     border-radius: 4px;
     margin-right: 8px !important;

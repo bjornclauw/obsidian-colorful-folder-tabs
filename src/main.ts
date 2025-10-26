@@ -1,27 +1,17 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin } from 'obsidian';
+import { FolderColorSettingTab } from './settings-tab';
+import type { FolderColorSettings } from './types';
 import './styles.css';
-
-interface FolderMapping {
-	name: string;
-	color: string;
-	textColor: string;
-}
-
-interface FolderColorSettings {
-	enabled: boolean;
-	mappings: FolderMapping[];
-	showDot: boolean;
-	topFolderFontWeight: number;
-}
 
 const DEFAULT_SETTINGS: FolderColorSettings = {
 	enabled: true,
+	mainFolderFontWeight: 700,
+	subFolderFontWeight: 500,
 	mappings: [
-		{ name: 'Projects', color: '#e74c3c', textColor: '#ffffff' },
-		{ name: 'Design', color: '#3498db', textColor: '#ffffff' },
+		{ name: 'Projects', color: '#e74c3c', textColor: '#ffffff', useTextColor: true },
+		{ name: 'Design', color: '#3498db', textColor: '#ffffff', useTextColor: true },
 	],
 	showDot: true,
-	topFolderFontWeight: 800,
 };
 
 export default class FolderColorPlugin extends Plugin {
@@ -30,31 +20,26 @@ export default class FolderColorPlugin extends Plugin {
 	private explorerObservers: Map<HTMLElement, MutationObserver> = new Map();
 
 	async onload() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		) as FolderColorSettings;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 		console.log('FolderColorPlugin loaded', this.settings);
 
-		// Register settings tab
+		// Add settings tab
 		this.addSettingTab(new FolderColorSettingTab(this.app, this));
 
-		// Command to toggle styles quickly
+		// Command to toggle
 		this.addCommand({
 			id: 'toggle-folder-colors',
 			name: 'Toggle folder colors',
 			callback: async () => {
 				this.settings.enabled = !this.settings.enabled;
 				await this.saveData(this.settings);
-				if (this.settings.enabled) this.addStyles();
-				else this.removeStyles();
+				this.settings.enabled ? this.applyAllStyles() : this.removeStyles();
 			},
 		});
 
-		// Apply styles when workspace layout is ready
+		// Apply styles on layout ready if enabled
 		this.app.workspace.onLayoutReady(() => {
-			if (this.settings.enabled) this.addStyles();
+			if (this.settings.enabled) this.applyAllStyles();
 		});
 	}
 
@@ -63,309 +48,159 @@ export default class FolderColorPlugin extends Plugin {
 		console.log('FolderColorPlugin unloaded');
 	}
 
-	/** --------------------- Core functionality --------------------- **/
+	/** ---------------- Core functionality ---------------- **/
 
-	public addStyles() {
-		this.applyStructuralStyles(); // always apply structural stuff
-		if (this.settings.enabled) {
-			this.applyMappingsToAllExplorers(); // colors only if enabled
-			this.setupObserversForExplorers();
-		}
+	/** Apply all styles (colors + dots + observers) */
+	public applyAllStyles() {
+		const mainWeight = this.settings.mainFolderFontWeight ?? 700; // fallback default
+		const subWeight = this.settings.subFolderFontWeight ?? 500;   // fallback default
+		document.documentElement.style.setProperty('--fc-main-folder-weight', mainWeight.toString());
+		document.documentElement.style.setProperty('--fc-sub-folder-weight', subWeight.toString());
+
+		this.applyStructuralStyles();
+		this.applyMappingsToAllExplorers();
+		this.setupObserversForExplorers();
 	}
 
+	/** Remove all plugin styles and observers */
 	public removeStyles() {
-    // Remove all inline colors and font weights
-    const allFolderItems = document.querySelectorAll(
-        '.tree-item.nav-folder, .nav-folder-title'
-    );
-    allFolderItems.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        htmlEl.style.removeProperty('--tab-color');
-        htmlEl.style.removeProperty('color');
+		document.querySelectorAll('.tree-item.nav-folder, .nav-folder-title')
+			.forEach(el => {
+				const htmlEl = el as HTMLElement;
+				htmlEl.classList.remove('fc-dot-enabled', 'fc-colored-folder');
+				htmlEl.style.removeProperty('--tab-color');
+				htmlEl.style.removeProperty('--text-color');
+			});
 
-        // Remove dot class
-        htmlEl.classList.remove('fc-dot-enabled');
-    });
+		this.observer?.disconnect();
+		this.observer = null;
 
-    // Disconnect main observer
-    if (this.observer) {
-        this.observer.disconnect();
-        this.observer = null;
-    }
+		this.explorerObservers.forEach(obs => obs.disconnect());
+		this.explorerObservers.clear();
+	}
 
-    // Disconnect all explorer-specific observers
-    this.explorerObservers.forEach((obs) => obs.disconnect());
-    this.explorerObservers = new Map();
-}
+	/** Apply dot indicators only */
 	private applyStructuralStyles() {
-		const explorers = document.querySelectorAll(
-			'.workspace-leaf-content[data-type="file-explorer"]'
+		const explorers = Array.from(
+			document.querySelectorAll('.workspace-leaf-content[data-type="file-explorer"]')
 		);
 
-		explorers.forEach((explorer) => {
-			const folderTitleEls = Array.from(
+		explorers.forEach(explorer => {
+			const folderTitles = Array.from(
 				explorer.querySelectorAll('.tree-item.nav-folder .nav-folder-title')
 			) as HTMLElement[];
 
-			folderTitleEls.forEach((titleEl) => {
-				// Show/hide dot
-				if (this.settings.showDot) {
-					titleEl.classList.add('fc-dot-enabled');
-				} else {
-					titleEl.classList.remove('fc-dot-enabled');
-				}
+			folderTitles.forEach(titleEl => {
+				if (this.settings.showDot) titleEl.classList.add('fc-dot-enabled');
+				else titleEl.classList.remove('fc-dot-enabled');
 			});
 		});
 	}
 
-	/** Apply mappings to all currently available explorers */
+	/** Apply color mappings to all explorers */
 	private applyMappingsToAllExplorers() {
-		const explorers = document.querySelectorAll(
-			'.workspace-leaf-content[data-type="file-explorer"]'
+		const explorers = Array.from(
+			document.querySelectorAll('.workspace-leaf-content[data-type="file-explorer"]')
 		);
-		explorers.forEach((explorer) =>
-			this.applyMappingsToDOM(explorer as HTMLElement)
-		);
+		explorers.forEach(explorer => this.applyMappingsToDOM(explorer as HTMLElement));
 	}
 
-	/** Apply mappings for a single explorer container */
+    /** 
+     * Apply color mappings to DOM elements inside an explorer.
+     * 
+     * Obsidian's API does not provide direct hooks for styling folder items individually,
+     * so we must access the DOM elements representing folders in the file explorer.
+     * Each top-level and subfolder title is matched against user-defined mappings
+     * to apply background and text colors dynamically.
+     */
 	private applyMappingsToDOM(container: HTMLElement) {
 		const mappings = this.settings.mappings || [];
 		if (!mappings.length) return;
 
-		const folderTitleEls = Array.from(
+		const folderTitles = Array.from(
 			container.querySelectorAll('.tree-item.nav-folder .nav-folder-title')
 		) as HTMLElement[];
 
-		folderTitleEls.forEach((titleEl) => {
+		folderTitles.forEach(titleEl => {
 			const text = titleEl.textContent?.trim() || '';
-			const mapping = mappings.find((m) => m.name === text);
+			const mapping = mappings.find(m => m.name === text);
 			const folderItem = titleEl.closest('.tree-item.nav-folder') as HTMLElement | null;
+
 			if (mapping && folderItem) {
 				folderItem.style.setProperty('--tab-color', mapping.color);
-				titleEl.style.setProperty('--tab-color', mapping.color);
-				titleEl.style.color = mapping.textColor || '#ffffff';
-			}
-			// Show/hide dot
-			if (this.settings.showDot) {
-				titleEl.classList.add('fc-dot-enabled');
+
+				if (mapping.useTextColor) {
+					titleEl.style.setProperty('--text-color', mapping.textColor);
+				} else {
+					titleEl.style.removeProperty('--text-color');
+				}
+
+				folderItem.classList.add('fc-colored-folder');
+				if (this.settings.showDot) titleEl.classList.add('fc-dot-enabled');
 			} else {
+				folderItem?.style.removeProperty('--tab-color');
+				titleEl?.style.removeProperty('--text-color');
+				folderItem?.classList.remove('fc-colored-folder');
 				titleEl.classList.remove('fc-dot-enabled');
 			}
 		});
 	}
 
-	/** Observe workspace for new explorers and apply mappings dynamically */
-	private setupObserversForExplorers() {
-		// Disconnect previous observer if any
-		if (this.observer) this.observer.disconnect();
+	/**
+ * Observe workspace for dynamically added explorers.
+ *
+ * Only observes new file explorers being added to the workspace.
+ * Each explorer container is then passed to `observeExplorerContainer` 
+ * which further scopes the observation to `.nav-files-container`.
+ */
+private setupObserversForExplorers() {
+	// Disconnect previous workspace observer if exists
+	if (this.observer) this.observer.disconnect();
 
-		this.observer = new MutationObserver((mutations) => {
-			mutations.forEach((m) => {
-				m.addedNodes.forEach((node) => {
-					if (!(node instanceof HTMLElement)) return;
-					if (
-						node.matches(
-							'.workspace-leaf-content[data-type="file-explorer"]'
-						)
-					) {
-						this.applyMappingsToDOM(node);
-						this.observeExplorerContainer(node);
-					}
-				});
-			});
-		});
+	// Observe the workspace root for new file explorers
+	this.observer = new MutationObserver(mutations => {
+		for (const m of mutations) {
+			for (const node of Array.from(m.addedNodes)) {
+				if (!(node instanceof HTMLElement)) continue;
 
-		const workspaceRoot = document.querySelector('.workspace');
-		if (workspaceRoot) {
-			this.observer.observe(workspaceRoot, {
-				childList: true,
-				subtree: true,
-			});
+				// Only act on newly added file explorer containers
+				if (node.matches('.workspace-leaf-content[data-type="file-explorer"]')) {
+					this.applyMappingsToDOM(node);
+					this.observeExplorerContainer(node);
+				}
+			}
 		}
+	});
 
-		// Also observe existing explorers
-		const explorers = document.querySelectorAll(
-			'.workspace-leaf-content[data-type="file-explorer"]'
-		);
-		explorers.forEach((explorer) =>
-			this.observeExplorerContainer(explorer as HTMLElement)
-		);
+	const workspaceRoot = document.querySelector('.workspace');
+	if (workspaceRoot) {
+		this.observer.observe(workspaceRoot, { childList: true, subtree: true });
 	}
 
-	/** Observe a single explorer container for folder changes */
-	private observeExplorerContainer(container: HTMLElement) {
-		if (this.explorerObservers.has(container)) return;
-
-		const innerObserver = new MutationObserver(() => {
-			this.applyMappingsToDOM(container);
-		});
-		innerObserver.observe(container, { childList: true, subtree: true });
-		this.explorerObservers.set(container, innerObserver);
-	}
+	// Ensure existing explorers are also observed
+	const explorers = Array.from(
+		document.querySelectorAll('.workspace-leaf-content[data-type="file-explorer"]')
+	);
+	explorers.forEach(explorer => this.observeExplorerContainer(explorer as HTMLElement));
 }
 
-class FolderColorSettingTab extends PluginSettingTab {
-	plugin: FolderColorPlugin;
+/**
+ * Observe a single explorer container.
+ *
+ * Only observes the `.nav-files-container` element inside the explorer,
+ * which contains all folder and note nodes. This reduces unnecessary
+ * MutationObserver overhead from other parts of the explorer pane.
+ */
+private observeExplorerContainer(container: HTMLElement) {
+	if (this.explorerObservers.has(container)) return;
 
-	constructor(app: App, plugin: FolderColorPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+	const folderContainer = container.querySelector('.nav-files-container');
+	if (!folderContainer) return;
 
-	display(): void {
-		const { containerEl } = this;
-		containerEl.empty();
-		containerEl.createEl('h2', { text: 'Folder Color settings' });
+	const innerObserver = new MutationObserver(() => this.applyMappingsToDOM(container));
+	innerObserver.observe(folderContainer, { childList: true, subtree: true });
 
-		new Setting(containerEl)
-			.setName('Enable folder colors')
-			.setDesc('Toggle the folder color styling in the file explorer')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.enabled)
-					.onChange(async (value) => {
-						this.plugin.settings.enabled = value;
-						await this.plugin.saveData(this.plugin.settings);
+	this.explorerObservers.set(container, innerObserver);
+}
 
-						// Apply or remove styles immediately
-						if (value) this.plugin.addStyles();
-						else this.plugin.removeStyles();
-
-						// Re-render settings panel so sections hide/show instantly
-						this.display();
-					})
-			);
-
-		// --- Hide everything else if disabled ---
-		if (!this.plugin.settings.enabled) {
-			const note = containerEl.createEl('p', {
-				text: 'Folder colors are currently disabled. Enable them to configure mappings.',
-			});
-			note.style.color = 'var(--text-muted)';
-			note.style.fontStyle = 'italic';
-			return; // stop rendering the rest
-		}
-
-		new Setting(containerEl)
-			.setName('Show colored dot')
-			.setDesc('Display a colored dot on top-level folders')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.showDot)
-					.onChange(async (value) => {
-						this.plugin.settings.showDot = value;
-						await this.plugin.saveData(this.plugin.settings);
-						if (this.plugin.settings.enabled) this.plugin.addStyles();
-					})
-			);
-		// Mappings list
-		containerEl.createEl('h3', { text: 'Folder → Color mappings' });
-		const list = containerEl.createDiv({ cls: 'folder-color-list' });
-		const mappings = this.plugin.settings.mappings || [];
-
-		mappings.forEach((m, idx) => {
-			const row = list.createDiv({ cls: 'folder-mapping-row' });
-			row.style.display = 'flex';
-			row.style.alignItems = 'center';
-			row.style.gap = '10px';
-			row.style.marginBottom = '6px';
-
-			// Folder name
-			const nameInput = row.createEl('input', {
-				attr: { type: 'text', placeholder: 'Folder name', value: m.name },
-			});
-			nameInput.classList.add('folder-name-input');
-			nameInput.style.flex = '1';
-			nameInput.onchange = async () => {
-				mappings[idx].name = nameInput.value.trim();
-				await this.plugin.saveData(this.plugin.settings);
-				if (this.plugin.settings.enabled) this.plugin.addStyles();
-				this.display();
-			};
-
-			// Background color
-			const colorLabel = row.createEl('span', { text: 'BG', cls: 'mapping-label' });
-			colorLabel.title = 'Background color';
-			const colorInput = row.createEl('input', {
-				attr: { type: 'color', value: m.color || '#ff0000' },
-			});
-			colorInput.style.width = '40px';
-			colorInput.style.height = '28px';
-			colorInput.style.cursor = 'pointer';
-			colorInput.onchange = async () => {
-				mappings[idx].color = colorInput.value;
-				await this.plugin.saveData(this.plugin.settings);
-				if (this.plugin.settings.enabled) this.plugin.addStyles();
-			};
-
-			// Text color
-			const textLabel = row.createEl('span', { text: 'TXT', cls: 'mapping-label' });
-			textLabel.title = 'Text color';
-			const textColorInput = row.createEl('input', {
-				attr: { type: 'color', value: m.textColor || '#ffffff' },
-			});
-			textColorInput.style.width = '40px';
-			textColorInput.style.height = '28px';
-			textColorInput.style.cursor = 'pointer';
-			textColorInput.onchange = async () => {
-				mappings[idx].textColor = textColorInput.value;
-				await this.plugin.saveData(this.plugin.settings);
-				if (this.plugin.settings.enabled) this.plugin.addStyles();
-			};
-
-			// Remove button
-			const removeBtn = row.createEl('button', { text: '✕' });
-			removeBtn.classList.add('mod-warning');
-			removeBtn.style.marginLeft = 'auto';
-			removeBtn.title = 'Remove this mapping';
-			removeBtn.onclick = async () => {
-				mappings.splice(idx, 1);
-				await this.plugin.saveData(this.plugin.settings);
-				if (this.plugin.settings.enabled) this.plugin.addStyles();
-				this.display();
-			};
-		});
-
-		// Add new mapping
-		containerEl.createEl('h4', { text: 'Add new mapping' });
-		const addRow = containerEl.createDiv({ cls: 'folder-mapping-add' });
-		addRow.style.display = 'flex';
-		addRow.style.alignItems = 'center';
-		addRow.style.gap = '10px';
-		addRow.style.marginTop = '8px';
-
-		const newName = addRow.createEl('input', {
-			attr: { type: 'text', placeholder: 'Folder name' },
-		});
-		newName.style.flex = '1';
-
-		const newColor = addRow.createEl('input', {
-			attr: { type: 'color', value: '#ff0000' },
-		});
-		newColor.style.width = '40px';
-		newColor.style.height = '28px';
-		newColor.style.cursor = 'pointer';
-
-		const newTextColor = addRow.createEl('input', {
-			attr: { type: 'color', value: '#ffffff' },
-		});
-		newTextColor.style.width = '40px';
-		newTextColor.style.height = '28px';
-		newTextColor.style.cursor = 'pointer';
-
-		const addBtn = addRow.createEl('button', { text: 'Add mapping' });
-		addBtn.classList.add('mod-cta');
-		addBtn.onclick = async () => {
-			const name = (newName.value || '').trim();
-			if (!name) return;
-			const color = newColor.value || '#ffffff';
-			const textColor = newTextColor.value || '#ffffff';
-			this.plugin.settings.mappings.push({ name, color, textColor });
-			await this.plugin.saveData(this.plugin.settings);
-			if (this.plugin.settings.enabled) this.plugin.addStyles();
-			this.display();
-		};
-
-	}
 }

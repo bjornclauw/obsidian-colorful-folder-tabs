@@ -1,7 +1,7 @@
 {
 	"id": "colorful-folder-tabs",
 	"name": "Colorful Folder Tabs",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"minAppVersion": "0.15.0",
 	"description": "Add colorful tabs and highlights to your folders in the file explorer.",
 	"author": "bjornclauw",
