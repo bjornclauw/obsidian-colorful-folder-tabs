@@ -26,7 +26,6 @@ use it with "custom file explorer sorting" to customize the order of folders and
 - Dynamic application — changes appear immediately in the file explorer.  
 - Defaults are applied if no custom values are set.  
 
----
 
 ## Screenshots
 
@@ -35,7 +34,6 @@ use it with "custom file explorer sorting" to customize the order of folders and
 ![menu example 3](docs/image3.png)
 ![Settings example](docs/settings.png)
 
----
 
 ## Installation
 
@@ -43,7 +41,6 @@ use it with "custom file explorer sorting" to customize the order of folders and
 2. Extract the contents into your Obsidian vault under `/.obsidian/plugins/colorful-folder-tabs/`.  
 3. Open Obsidian, go to **Settings → Community Plugins → Colorful Folder Tabs**, and enable it.  
 
----
 
 ## Usage
 
@@ -60,7 +57,6 @@ use it with "custom file explorer sorting" to customize the order of folders and
 > Folder colors are applied **without overriding your theme**, but the background color can be used by themes (like Blue Topaz) to determine folder style.  
 > The plugin also **adds subtle highlights** in the file explorer and uses a **tab-style layout** for top-level folders.  
 
----
 
 ## Settings Reference
 
@@ -72,7 +68,6 @@ use it with "custom file explorer sorting" to customize the order of folders and
 | Subfolder font weight | Font weight for subfolders | `500` |
 | Folder mappings | Custom folder → color mappings | None |
 
----
 
 ## Development
 
@@ -89,12 +84,13 @@ Build the plugin:
 ```bash
 npm run build
 ```
-
 Open your vault in Obsidian with Developer Mode enabled to test your changes.
+
 
 ## Contributing
 
 Contributions, bug reports, and feature requests are welcome! Please follow standard GitHub workflows: fork → branch → PR.
+
 
 ## License
 
@@ -103,6 +99,7 @@ Copyright (C) 2020-2025 by Dynalist Inc.
 Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
 
 ## Support
 
