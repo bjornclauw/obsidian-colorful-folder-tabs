@@ -17,7 +17,7 @@ export class FolderColorSettingTab extends PluginSettingTab {
 
 
 
-// --------------------------
+	// --------------------------
 	// Main folder font weight
 	// --------------------------
 	new Setting(containerEl)
@@ -117,9 +117,9 @@ export class FolderColorSettingTab extends PluginSettingTab {
 			const rowGroup = leftGroup.createDiv();
 			rowGroup.style.display = 'flex';
 			rowGroup.style.alignItems = 'center';
-			rowGroup.style.gap = '30px'; // space between background color picker and text color controls
+			rowGroup.style.gap = '30px';
 
-			// Background color picker (first group)
+			// Background color picker
 			const bgColor = rowGroup.createEl('input', { type: 'color', value: m.color, cls: 'fc-color-input' });
 			bgColor.addEventListener('input', async (e) => {
 				mappings[idx].color = (e.target as HTMLInputElement).value;
@@ -127,11 +127,11 @@ export class FolderColorSettingTab extends PluginSettingTab {
 				this.plugin.applyAllStyles();
 			});
 
-			// Text color controls (second group)
+			// Text color controls
 			const textGroup = rowGroup.createDiv();
 			textGroup.style.display = 'flex';
 			textGroup.style.alignItems = 'center';
-			textGroup.style.gap = '5px'; // small gap only inside this group
+			textGroup.style.gap = '5px';
 
 			// Label
 			textGroup.createEl('span', { text: 'Use custom text color:' });
