@@ -2,9 +2,11 @@
 
 Enhance your Obsidian file explorer with **custom folder colors, optional text colors, font weights, highlights, and a tab-style layout**. Easily distinguish main folders and subfolders at a glance.  
 
-use it with the "iconic plugin" to add custom icons to folders/files: https://obsidian.md/plugins?id=iconic
+use it with the "iconic plugin" to add custom icons to folders/files: 
+- https://obsidian.md/plugins?id=iconic
 
-use it with "custom file explorer sorting" to customize the order of folders and files: https://obsidian.md/plugins?id=custom-sort
+use it with "custom file explorer sorting" to customize the order of folders and files: 
+- https://obsidian.md/plugins?id=custom-sort
 
 ---
 
